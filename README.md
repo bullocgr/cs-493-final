@@ -14,6 +14,6 @@
     mysql            \
         mysql -h mysql-server-final  -u guest -p`
 
-Once you're in the docker database run :`USE cs493-db`
+Once you're in the docker database run :`USE cs493-db;`
 
 Then add the dummy data
