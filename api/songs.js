@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const { requireAuthentication } = require('../lib/auth');
 
 
 const {
@@ -22,18 +23,18 @@ router.get('/', async (req, res) => {
      */
     const songsPage = await getSongsPage(parseInt(req.query.page) || 1);
     if (songsPage.page < songsPage.totalPages) {
-      songsPage.links.nextPage = `/songses?page=${songsPage.page + 1}`;
-      songsPage.links.lastPage = `/songses?page=${songsPage.totalPages}`;
+      songsPage.links.nextPage = `/songs?page=${songsPage.page + 1}`;
+      songsPage.links.lastPage = `/songs?page=${songsPage.totalPages}`;
     }
     if (songsPage.page > 1) {
-      songsPage.links.prevPage = `/songses?page=${songsPage.page - 1}`;
-      songsPage.links.firstPage = '/songses?page=1';
+      songsPage.links.prevPage = `/songs?page=${songsPage.page - 1}`;
+      songsPage.links.firstPage = '/songs?page=1';
     }
     res.status(200).send(songsPage);
   } catch (err) {
     console.error(err);
     res.status(500).send({
-      error: "Error fetching songses list.  Please try again later."
+      error: "Error fetching songs list.  Please try again later."
     });
   }
 });
@@ -46,9 +47,9 @@ router.post('/', async (req, res) => {
     try {
       const id = await insertNewSong(req.body);
       res.status(201).send({
-        id: id,
+        id: req.body.id,
         links: {
-          song: `/songs/${id}`
+          song: `/songs/${req.body.id}`
         }
       });
     } catch (err) {
@@ -65,20 +66,20 @@ router.post('/', async (req, res) => {
 });
 
 /*
- * Route to fetch info about a specific business.
+ * Route to fetch info about a specific song.
  */
 router.get('/:id', async (req, res, next) => {
   try {
-    const business = await getSongDetailsById(parseInt(req.params.id));
-    if (business) {
-      res.status(200).send(business);
+    const song = await getSongDetailsById(parseInt(req.params.id));
+    if (song) {
+      res.status(200).send(song);
     } else {
       next();
     }
   } catch (err) {
     console.error(err);
     res.status(500).send({
-      error: "Unable to fetch business.  Please try again later."
+      error: "Unable to fetch song.  Please try again later."
     });
   }
 });
@@ -116,7 +117,8 @@ router.put('/:id', async (req, res, next) => {
 /*
  * Route to delete a song.
  */
-router.delete('/:id', async (req, res, next) => {
+router.delete('/:id', requireAuthentication, async (req, res, next) => {
+  if(req.user == 1){
   try {
     const deleteSuccessful = await deleteSongById(parseInt(req.params.id));
     if (deleteSuccessful) {
@@ -130,6 +132,12 @@ router.delete('/:id', async (req, res, next) => {
       error: "Unable to delete song.  Please try again later."
     });
   }
+}
+else{
+  res.status(401).send({
+    error: "You are not an admin."
+  });
+}
 });
 
 module.exports = router;

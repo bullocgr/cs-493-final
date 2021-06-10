@@ -10,7 +10,10 @@ const {
   replaceuserById,
   deleteuserById,
   getusersPage,
-  validateUser
+  validateUser,
+  replaceUserAlbumList,
+  replaceUserArtistList,
+  replaceUserSongsList
 } = require('../models/users');
 
 router.get('/:id', requireAuthentication, async (req, res) => {
@@ -25,7 +28,7 @@ router.get('/:id', requireAuthentication, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).send({
-      error: "Error fetching useres list.  Please try again later."
+      error: "Error fetching user list.  Please try again later."
     });
   }
 }
@@ -36,7 +39,8 @@ else{
 }
 });
 
-router.get('/', async (req, res) => {
+router.get('/', requireAuthentication, async (req, res) => {
+  if(req.user == 1){
   try {
     /*
      * Fetch page info, generate HATEOAS links for surrounding pages and then
@@ -58,6 +62,12 @@ router.get('/', async (req, res) => {
       error: "Error fetching users list.  Please try again later."
     });
   }
+}
+  else{
+    res.status(401).send({
+      error: "You are not an admin."
+    });
+  }
 });
 
 /*
@@ -66,22 +76,22 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
 if(validateAgainstSchema(req.body, UserSchema)){
   try {
-    const deleteSuccessful = await insertNewuser(req.body);
-    if (deleteSuccessful) {
+    const insertSuccess = await insertNewuser(req.body);
+    if (insertSuccess) {
       res.status(201).send({
-        success: "Changed new user into database!",
+        success: "Added new user into database!",
       });
     }
   } catch (err) {
     console.error(err);
     res.status(500).send({
-      error: "Unable to delete review.  Please try again later."
+      error: "Unable to add user .  Please try again later."
     });
   }
 }
 else{
   res.status(500).send({
-    error: "Unable to make new user.  Please try again later."
+    error: "Wrong schema for new user.  Please try again later."
   });
 }
 });
@@ -93,16 +103,16 @@ router.put('/:id',  requireAuthentication, async (req, res) => {
   if(req.user == req.params.id){
   if(validateAgainstSchema(req.body, UserSchema)){
     try {
-      const deleteSuccessful = await replaceuserById(req.params.id,req.body);
-      if (deleteSuccessful) {
+      const replaceSuccess = await replaceuserById(req.params.id,req.body);
+      if (replaceSuccess) {
         res.status(201).send({
-          success: "Changed new user into database!",
+          success: "Changed user in the database!",
         });
       }
     } catch (err) {
       console.error(err);
       res.status(500).send({
-        error: "Unable to delete review.  Please try again later."
+        error: "Unable to change user.  Please try again later."
       });
     }
   }
@@ -139,5 +149,95 @@ else{
       });
     }
   });
-  
+  router.put('/:id/albums',  requireAuthentication, async (req, res) => {
+    if(req.user == req.params.id){
+    if(req.body && req.body.albums){
+      try {
+        const replaceSuccess = await replaceUserAlbumList(req.params.id,req.body);
+        if (replaceSuccess) {
+          res.status(201).send({
+            success: "Updated user album!",
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        res.status(500).send({
+          error: "Unable to update user albums.  Please try again later."
+        });
+      }
+    }
+    else{
+      res.status(401).send({
+        error: "You're trying to change something other than albums! You sneaky devil you."
+      });
+    }
+  }
+  else{
+    res.status(401).send({
+      error: "Unauthorized action."
+    });
+  }
+    });
+module.exports = router;
+
+router.put('/:id/artists',  requireAuthentication, async (req, res) => {
+  if(req.user == req.params.id){
+  if(req.body && req.body.artists){
+    try {
+      const replaceSuccess = await replaceUserArtistList(req.params.id,req.body);
+      if (replaceSuccess) {
+        res.status(201).send({
+          success: "Updated user artist!",
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      res.status(500).send({
+        error: "Unable to update user artist.  Please try again later."
+      });
+    }
+  }
+  else{
+    res.status(401).send({
+      error: "You're trying to change something other than artists! You sneaky devil you."
+    });
+  }
+}
+else{
+  res.status(401).send({
+    error: "Unauthorized action."
+  });
+}
+  });
+module.exports = router;
+
+router.put('/:id/songs',  requireAuthentication, async (req, res) => {
+  if(req.user == req.params.id){
+  if(req.body && req.body.songs){
+    try {
+      const replaceSuccess = await replaceUserSongsList(req.params.id,req.body);
+      if (replaceSuccess) {
+        res.status(201).send({
+          success: "Updated user songs!",
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      res.status(500).send({
+        error: "Unable to update user songs.  Please try again later."
+      });
+    }
+  }
+  else{
+    res.status(401).send({
+      error: "You're trying to change something other than songs! You sneaky devil you."
+    });
+  }
+}
+else{
+  res.status(401).send({
+    error: "Unauthorized action."
+  });
+}
+  });
 module.exports = router;

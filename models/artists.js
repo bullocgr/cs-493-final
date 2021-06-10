@@ -6,7 +6,8 @@ const { extractValidFields } = require('../lib/validation');
  */
 const ArtistSchema = {
     name: { required: true },
-    id: { required: true }
+    id: { required: true },
+    album: { required: true }
 };
 exports.ArtistSchema = ArtistSchema;
 

@@ -8,6 +8,7 @@ const AlbumSchema = {
     id: { required: true },
     date: { required: true },
     name: { required: false },
+    songs: { required: true },
     cover: { required: true },
 };
 exports.AlbumSchema = AlbumSchema;

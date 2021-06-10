@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const { requireAuthentication } = require('../lib/auth');
 
 const {
   AlbumSchema,
@@ -21,18 +22,18 @@ router.get('/', async (req, res) => {
        */
       const albumsPage = await getAlbumsPage(parseInt(req.query.page) || 1);
       if (albumsPage.page < albumsPage.totalPages) {
-        albumsPage.links.nextPage = `/albumses?page=${albumsPage.page + 1}`;
-        albumsPage.links.lastPage = `/albumses?page=${albumsPage.totalPages}`;
+        albumsPage.links.nextPage = `/albums?page=${albumsPage.page + 1}`;
+        albumsPage.links.lastPage = `/albums?page=${albumsPage.totalPages}`;
       }
       if (albumsPage.page > 1) {
-        albumsPage.links.prevPage = `/albumses?page=${albumsPage.page - 1}`;
-        albumsPage.links.firstPage = '/albumses?page=1';
+        albumsPage.links.prevPage = `/albums?page=${albumsPage.page - 1}`;
+        albumsPage.links.firstPage = '/albums?page=1';
       }
       res.status(200).send(albumsPage);
     } catch (err) {
       console.error(err);
       res.status(500).send({
-        error: "Error fetching albumses list.  Please try again later."
+        error: "Error fetching albums list.  Please try again later."
       });
     }
   });
@@ -45,9 +46,9 @@ router.get('/', async (req, res) => {
       try {
         const id = await insertNewAlbum(req.body);
         res.status(201).send({
-          id: id,
+          id: req.body.id,
           links: {
-            album: `/albums/${id}`
+            album: `/albums/${req.body.id}`
           }
         });
       } catch (err) {
@@ -115,7 +116,8 @@ router.put('/:id', async (req, res, next) => {
   /*
    * Route to delete a album.
    */
-  router.delete('/:id', async (req, res, next) => {
+  router.delete('/:id', requireAuthentication, async (req, res, next) => {
+    if(req.user == 1){
     try {
       const deleteSuccessful = await deleteAlbumById(parseInt(req.params.id));
       if (deleteSuccessful) {
@@ -129,6 +131,12 @@ router.put('/:id', async (req, res, next) => {
         error: "Unable to delete album.  Please try again later."
       });
     }
+  }
+  else{
+    res.status(401).send({
+      error: "You are not an admin."
+    });
+  }
   });
   
   module.exports = router;

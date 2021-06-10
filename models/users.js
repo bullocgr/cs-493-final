@@ -101,3 +101,30 @@ async function deleteuserById(id) {
     }
 exports.deleteuserById = deleteuserById;
 
+async function replaceUserAlbumList(id, user) {
+  const [ result ] = await mysqlPool.query(
+    'UPDATE user SET ? WHERE id = ?',
+    [ user, id ]
+  );
+  
+  return result.affectedRows > 0;
+}
+exports.replaceUserAlbumList = replaceUserAlbumList;
+
+async function replaceUserArtistList(id, user) {
+  const [ result ] = await mysqlPool.query(
+    'UPDATE user SET ? WHERE id = ?',
+    [ user, id ]
+  );
+  return result.affectedRows > 0;
+}
+exports.replaceUserArtistList = replaceUserArtistList;
+
+async function replaceUserSongsList(id, user) {
+  const [ result ] = await mysqlPool.query(
+    'UPDATE user SET ? WHERE id = ?',
+    [ user, id ]
+  );
+  return result.affectedRows > 0;
+}
+exports.replaceUserSongsList = replaceUserSongsList;

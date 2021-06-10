@@ -37,16 +37,16 @@ router.post('/', async (req, res) => {
     artistsSigned: req.body.artistsSigned
   };
   try {
-    const deleteSuccessful = await insertNewLabel(new_label);
-    if (deleteSuccessful) {
+    const insertSuccess = await insertNewLabel(new_label);
+    if (insertSuccess) {
       res.status(201).send({
-        success: "Changed new label into database!",
+        success: "Added new label into database!",
       });
     }
   } catch (err) {
     console.error(err);
     res.status(500).send({
-      error: "Unable to delete review.  Please try again later."
+      error: "Unable to add label.  Please try again later."
     });
   }
 });
@@ -63,16 +63,16 @@ router.put('/:id', requireAuthentication, async (req, res) => {
       artistsSigned: req.body.artistsSigned
     };
     try {
-      const deleteSuccessful = await replaceLabelById(parseInt(req.body.id),new_label);
-      if (deleteSuccessful) {
+      const replaceSuccess = await replaceLabelById(parseInt(req.body.id),new_label);
+      if (replaceSuccess) {
         res.status(201).send({
-          success: "Changed new label into database!",
+          success: "Changed label in database!",
         });
       }
     } catch (err) {
       console.error(err);
       res.status(500).send({
-        error: "Unable to delete review.  Please try again later."
+        error: "Unable to change label.  Please try again later."
       });
     }
   }
@@ -96,7 +96,7 @@ router.delete('/:id', requireAuthentication, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).send({
-      error: "Unable to delete review.  Please try again later."
+      error: "Unable to delete label.  Please try again later."
     });
   }
 }

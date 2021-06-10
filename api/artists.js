@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const { requireAuthentication } = require('../lib/auth');
 
 
 const {
@@ -45,9 +46,9 @@ router.post('/', async (req, res) => {
     try {
       const id = await insertNewArtist(req.body);
       res.status(201).send({
-        id: id,
+        id: req.body.id,
         links: {
-          artist: `/artists/${id}`
+          artist: `/artists/${req.body.id}`
         }
       });
     } catch (err) {
@@ -77,20 +78,20 @@ router.get('/:id', async (req, res, next) => {
   } catch (err) {
     console.error(err);
     res.status(500).send({
-      error: "Unable to fetch business.  Please try again later."
+      error: "Unable to fetch artist.  Please try again later."
     });
   }
 });
 
 /*
- * Route to replace data for a business.
+ * Route to replace data for an artist.
  */
 router.put('/:id', async (req, res, next) => {
   if (validateAgainstSchema(req.body, ArtistSchema)) {
     try {
       const id = parseInt(req.params.id)
-      const updateSuccessful = await replaceArtistById(id, req.body);
-      if (updateSuccessful) {
+      const replaceSuccess = await replaceArtistById(id, req.body);
+      if (replaceSuccess) {
         res.status(200).send({
           links: {
             artist: `/artists/${id}`
@@ -115,8 +116,9 @@ router.put('/:id', async (req, res, next) => {
 /*
  * Route to delete a artist.
  */
-router.delete('/:id', async (req, res, next) => {
-  try {
+router.delete('/:id', requireAuthentication, async (req, res, next) => {
+    if(req.user == 1){
+    try {
     const deleteSuccessful = await deleteArtistById(parseInt(req.params.id));
     if (deleteSuccessful) {
       res.status(204).end();
@@ -127,6 +129,12 @@ router.delete('/:id', async (req, res, next) => {
     console.error(err);
     res.status(500).send({
       error: "Unable to delete artist.  Please try again later."
+    });
+  }
+}
+  else{
+    res.status(401).send({
+      error: "You are not an admin."
     });
   }
 });
