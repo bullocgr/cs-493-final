@@ -1,80 +1,134 @@
 const router = require('express').Router();
 
-const mysqlPool = require('../lib/mysqlPool');
 
+const {
+  ArtistSchema,
+  getArtistsPage,
+  insertNewArtist,
+  getArtistDetailsById,
+  replaceArtistById,
+  deleteArtistById,
+  getArtistsByOwnerdId,
+} = require('../models/artists');
 
-const artistSchema = {
-id: { required: true },
-name: { required: true },
-popularity: { required: false },
-duration: { required: true },
-date: { required: true }
-};
+const { validateAgainstSchema } = require('../lib/validation');
 
 router.get('/', async (req, res) => {
-
-try {
-    const businessesPage = await getBusinessesPage(
-    parseInt(req.query.page) || 1
-    );
-    res.status(200).send(businessesPage);
-} catch (err) {
-    console.error("  -- error:", err);
+  try {
+    /*
+     * Fetch page info, generate HATEOAS links for surrounding pages and then
+     * send response.
+     */
+    const artistsPage = await getArtistsPage(parseInt(req.query.page) || 1);
+    if (artistsPage.page < artistsPage.totalPages) {
+      artistsPage.links.nextPage = `/artists?page=${artistsPage.page + 1}`;
+      artistsPage.links.lastPage = `/artists?page=${artistsPage.totalPages}`;
+    }
+    if (artistsPage.page > 1) {
+      artistsPage.links.prevPage = `/artists?page=${artistsPage.page - 1}`;
+      artistsPage.links.firstPage = '/artists?page=1';
+    }
+    res.status(200).send(artistsPage);
+  } catch (err) {
+    console.error(err);
     res.status(500).send({
-    err: "Error fetching business page from DB.  Try again later."
+      error: "Error fetching artists list.  Please try again later."
     });
-}  
+  }
 });
 
-
-async function getBusinessesPage(page) {
-const count = await getBusinessesCount();
-const numPerPage = 10;
-const lastPage = Math.ceil(count/numPerPage);
-page = page > lastPage ? lastPage : page;
-page = page < 1 ? 1 : page;
-const offset = (page - 1) * numPerPage;
-
 /*
-    * Calculate starting and ending indices of businesses on requested page and
-    * slice out the corresponsing sub-array of busibesses.
-    */
-// const start = (page - 1) * numPerPage;
-// const end = start + numPerPage;
-// const pageBusinesses = businesses.slice(start, end);
-
-const [ results ] = await mysqlPool.query(
-    "SELECT * FROM businesses ORDER BY id LIMIT ?,?",
-    [ offset, numPerPage ]
-);
-
-/*
-    * Generate HATEOAS links for surrounding pages.
-    */
-const links = {};
-if (page < lastPage) {
-    links.nextPage = `/businesses?page=${page + 1}`;
-    links.lastPage = `/businesses?page=${lastPage}`;
-}
-if (page > 1) {
-    links.prevPage = `/businesses?page=${page - 1}`;
-    links.firstPage = '/businesses?page=1';
-}
-
-/*
-    * Construct and send response.
-    */
-return{
-    businesses: results
-};
-}
-
-async function getBusinessesCount() {
-    const [ results ] = await mysqlPool.query(
-      "SELECT COUNT(*) AS count FROM businesses"
-    );
-    console.log("  -- results:", results);
-    return results[0].count;
+ * Route to create a new artists.
+ */
+router.post('/', async (req, res) => {
+  if (validateAgainstSchema(req.body, ArtistSchema)) {
+    try {
+      const id = await insertNewArtist(req.body);
+      res.status(201).send({
+        id: id,
+        links: {
+          artist: `/artists/${id}`
+        }
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).send({
+        error: "Error inserting artist into DB.  Please try again later."
+      });
+    }
+  } else {
+    res.status(400).send({
+      error: "Request body is not a valid artist object."
+    });
   }
+});
+
+/*
+ * Route to fetch info about a specific business.
+ */
+router.get('/:id', async (req, res, next) => {
+  try {
+    const business = await getArtistDetailsById(parseInt(req.params.id));
+    if (business) {
+      res.status(200).send(business);
+    } else {
+      next();
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({
+      error: "Unable to fetch business.  Please try again later."
+    });
+  }
+});
+
+/*
+ * Route to replace data for a business.
+ */
+router.put('/:id', async (req, res, next) => {
+  if (validateAgainstSchema(req.body, ArtistSchema)) {
+    try {
+      const id = parseInt(req.params.id)
+      const updateSuccessful = await replaceArtistById(id, req.body);
+      if (updateSuccessful) {
+        res.status(200).send({
+          links: {
+            artist: `/artists/${id}`
+          }
+        });
+      } else {
+        next();
+      }
+    } catch (err) {
+      console.error(err);
+      res.status(500).send({
+        error: "Unable to update specified artist.  Please try again later."
+      });
+    }
+  } else {
+    res.status(400).send({
+      error: "Request body is not a valid artist object"
+    });
+  }
+});
+
+/*
+ * Route to delete a artist.
+ */
+router.delete('/:id', async (req, res, next) => {
+  try {
+    const deleteSuccessful = await deleteArtistById(parseInt(req.params.id));
+    if (deleteSuccessful) {
+      res.status(204).end();
+    } else {
+      next();
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({
+      error: "Unable to delete artist.  Please try again later."
+    });
+  }
+});
 
 module.exports = router;
