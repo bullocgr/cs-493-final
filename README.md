@@ -1,5 +1,7 @@
 ## Run these commands in order to get the MySQL docker database running
 
+`docker network create cs493-final`
+
 `docker run -d --name mysql-server-final            
     --network cs493-final                    
     -p "3306:3306"                        
