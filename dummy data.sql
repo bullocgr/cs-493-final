@@ -26,7 +26,8 @@ CREATE TABLE `artist` (
 
 CREATE TABLE `user` (
   `id` mediumint(9) NOT NULL,
-  `name` varchar(255) NOT NULL,
+  `username` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
   `albums` mediumint(9),
   `songs` mediumint(9),
   `artists` mediumint(9),
