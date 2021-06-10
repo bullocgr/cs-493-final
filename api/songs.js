@@ -83,53 +83,53 @@ router.get('/:id', async (req, res, next) => {
   }
 });
 
-// /*
-//  * Route to replace data for a business.
-//  */
-// router.put('/:id', requireAuthentication, async (req, res, next) => {
-//   if (validateAgainstSchema(req.body, BusinessSchema)) {
-//     try {
-//       const id = parseInt(req.params.id)
-//       const updateSuccessful = await replaceBusinessById(id, req.body);
-//       if (updateSuccessful) {
-//         res.status(200).send({
-//           links: {
-//             business: `/businesses/${id}`
-//           }
-//         });
-//       } else {
-//         next();
-//       }
-//     } catch (err) {
-//       console.error(err);
-//       res.status(500).send({
-//         error: "Unable to update specified business.  Please try again later."
-//       });
-//     }
-//   } else {
-//     res.status(400).send({
-//       error: "Request body is not a valid business object"
-//     });
-//   }
-// });
+/*
+ * Route to replace data for a business.
+ */
+router.put('/:id', async (req, res, next) => {
+  if (validateAgainstSchema(req.body, SongSchema)) {
+    try {
+      const id = parseInt(req.params.id)
+      const updateSuccessful = await replaceSongById(id, req.body);
+      if (updateSuccessful) {
+        res.status(200).send({
+          links: {
+            song: `/songs/${id}`
+          }
+        });
+      } else {
+        next();
+      }
+    } catch (err) {
+      console.error(err);
+      res.status(500).send({
+        error: "Unable to update specified song.  Please try again later."
+      });
+    }
+  } else {
+    res.status(400).send({
+      error: "Request body is not a valid song object"
+    });
+  }
+});
 
-// /*
-//  * Route to delete a business.
-//  */
-// router.delete('/:id', requireAuthentication, async (req, res, next) => {
-//   try {
-//     const deleteSuccessful = await deleteBusinessById(parseInt(req.params.id));
-//     if (deleteSuccessful) {
-//       res.status(204).end();
-//     } else {
-//       next();
-//     }
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).send({
-//       error: "Unable to delete business.  Please try again later."
-//     });
-//   }
-// });
+/*
+ * Route to delete a song.
+ */
+router.delete('/:id', async (req, res, next) => {
+  try {
+    const deleteSuccessful = await deleteSongById(parseInt(req.params.id));
+    if (deleteSuccessful) {
+      res.status(204).end();
+    } else {
+      next();
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({
+      error: "Unable to delete song.  Please try again later."
+    });
+  }
+});
 
 module.exports = router;
