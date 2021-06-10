@@ -13,7 +13,7 @@ const redisClient = redis.createClient(
 );
 
 const rateLimitWindowMS = 60000;
-const rateLimitMaxRequests = 5;
+const rateLimitMaxRequests = 3;
 
 function getUserTokenBucket(ip) {
   return new Promise((resolve, reject) => {
