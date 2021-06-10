@@ -9,14 +9,8 @@ const {
   getusersAll,
   replaceuserById,
   deleteuserById,
-  validateUser,
-  removeFollowedArtist,
-  addFollowedArtist,
-  removeSongFromFavorites,
-  addSongToFavorites,
-  removeAlbumArt,
-  addAlbumArt,
-  getusersPage
+  getusersPage,
+  validateUser
 } = require('../models/users');
 
 router.get('/:id', requireAuthentication, async (req, res) => {
@@ -85,6 +79,11 @@ if(validateAgainstSchema(req.body, UserSchema)){
     });
   }
 }
+else{
+  res.status(500).send({
+    error: "Unable to make new user.  Please try again later."
+  });
+}
 });
 
 /*
@@ -114,186 +113,31 @@ else{
   });
 }
   });
-  router.put('/:id/removeAlbumArt/:albumID',  requireAuthentication, async (req, res) => {
-    if(req.user == req.params.id){
-      try {
-        const deleteSuccessful = await removeAlbumArt(req.params.id, req.params.albumID);
-        if (deleteSuccessful) {
-          res.status(201).send({
-            success: "Changed new user into database!",
-          });
-        }
-      } catch (err) {
-        console.error(err);
-        res.status(500).send({
-          error: "Unable to delete review.  Please try again later."
-        });
-      }
-  }
-  else{
-    res.status(401).send({
-      error: "Unauthorized action."
-    });
-  }
-    });
-router.put('/:id/addAlbumArt/:albumID',  requireAuthentication, async (req, res) => {
-    if(req.user == req.params.id){
-      try {
-        const deleteSuccessful = await addAlbumArt(req.params.id, req.params.albumID);
-        if (deleteSuccessful) {
-          res.status(201).send({
-            success: "Changed new user into database!",
-          });
-        }
-      } catch (err) {
-        console.error(err);
-        res.status(500).send({
-          error: "Unable to delete review.  Please try again later."
-        });
-      }
-  }
-  else{
-    res.status(401).send({
-      error: "Unauthorized action."
-    });
-  }
-    });
-router.put('/:id/addSongToFavorites/:songID',  requireAuthentication, async (req, res) => {
-    if(req.user == req.params.id){
-      try {
-        const deleteSuccessful = await addSongToFavorites(req.params.id, req.params.songID);
-        if (deleteSuccessful) {
-          res.status(201).send({
-            success: "Changed new user into database!",
-          });
-        }
-      } catch (err) {
-        console.error(err);
-        res.status(500).send({
-          error: "Unable to delete review.  Please try again later."
-        });
-      }
-  }
-  else{
-    res.status(401).send({
-      error: "Unauthorized action."
-    });
-  }
-    });
-router.put('/:id/removeSongFromFavorites/:songID',  requireAuthentication, async (req, res) => {
-    if(req.user == req.params.id){
-      try {
-        const deleteSuccessful = await removeSongFromFavorites(req.params.id, req.params.songID);
-        if (deleteSuccessful) {
-          res.status(201).send({
-            success: "Changed new user into database!",
-          });
-        }
-      } catch (err) {
-        console.error(err);
-        res.status(500).send({
-          error: "Unable to delete review.  Please try again later."
-        });
-      }
-  }
-  else{
-    res.status(401).send({
-      error: "Unauthorized action."
-    });
-  }
-    });
-router.put('/:id/follow/:artistID',  requireAuthentication, async (req, res) => {
-    if(req.user == req.params.id){
-      try {
-        const deleteSuccessful = await addFollowedArtist(req.params.id, req.params.artistID);
-        if (deleteSuccessful) {
-          res.status(201).send({
-            success: "Changed new user into database!",
-          });
-        }
-      } catch (err) {
-        console.error(err);
-        res.status(500).send({
-          error: "Unable to delete review.  Please try again later."
-        });
-      }
-  }
-  else{
-    res.status(401).send({
-      error: "Unauthorized action."
-    });
-  }
-    });
-router.put('/:id/unfollow/:artistID',  requireAuthentication, async (req, res) => {
-    if(req.user == req.params.id){
-      try {
-        const deleteSuccessful = await removeFollowedArtist(req.params.id, req.params.artistID);
-        if (deleteSuccessful) {
-          res.status(201).send({
-            success: "Changed new user into database!",
-          });
-        }
-      } catch (err) {
-        console.error(err);
-        res.status(500).send({
-          error: "Unable to delete review.  Please try again later."
-        });
-      }
-  }
-  else{
-    res.status(401).send({
-      error: "Unauthorized action."
-    });
-  }
-    });
 
-/*
- * Route to delete a user.
- */
-router.delete('/:id', requireAuthentication, async (req, res) => {
-  if(req.user == req.params.id){
-  try {
-    const deleteSuccessful = await deleteuserById(parseInt(req.params.id));
-    if (deleteSuccessful) {
-      res.status(204).end();
-    }
-  } catch (err) {
-    console.error(err);
-    res.status(500).send({
-      error: "Unable to delete review.  Please try again later."
-    });
-  }
-}
-else{
-  res.status(401).send({
-    error: "Unauthorized action."
-  });
-}
-});
-router.post('/login', async (req, res) => {
-  if (req.body && req.body.id && req.body.password) {
-    try {
-      const authenticated = await validateUser(req.body.id, req.body.password);
-      if (authenticated) {
-        res.status(200).send({
-          token: generateAuthToken(req.body.id)
-        });
-      } else {
-        res.status(401).send({
-          error: "Invalid authentication credentials."
+  router.post('/login', async (req, res) => {
+    if (req.body && req.body.id && req.body.password) {
+      try {
+        const authenticated = await validateUser(req.body.id, req.body.password);
+        if (authenticated) {
+          res.status(200).send({
+            token: generateAuthToken(req.body.id)
+          });
+        } else {
+          res.status(401).send({
+            error: "Invalid authentication credentials."
+          });
+        }
+      } catch (err) {
+        console.error("  -- error:", err);
+        res.status(500).send({
+          error: "Error logging in.  Try again later."
         });
       }
-    } catch (err) {
-      console.error("  -- error:", err);
-      res.status(500).send({
-        error: "Error logging in.  Try again later."
+    } else {
+      res.status(400).send({
+        error: "Request body needs `id` and `password`."
       });
     }
-  } else {
-    res.status(400).send({
-      error: "Request body needs `id` and `password`."
-    });
-  }
-});
-
+  });
+  
 module.exports = router;
