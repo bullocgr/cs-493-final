@@ -7,13 +7,12 @@ const { extractValidFields } = require('../lib/validation');
 const mysqlPool = require('../lib/mysqlPool');
 
 const UserSchema = {
-  name: { required: true },
-  id: { required: false },
+  id: { required: true },
+  username: { required: true },
   password: { required: true },
-  followed_artists: { required: false },
-  favSong: { required: false },
-  favAlbumArt: { required: false },
-  labelOwned: {required: false}
+  albums: { required: false },
+  songs: { required: false },
+  artists: { required: false }
 };
 exports.UserSchema = UserSchema;
 async function getusersPage(page) {
@@ -56,6 +55,7 @@ exports.getusersAll = getusersAll;
 
 async function insertNewuser(user) {
     users = extractValidFields(user, UserSchema);
+    console.log()
     const [ result ] = await mysqlPool.query(
       'INSERT INTO user SET ?',
       users
@@ -65,6 +65,12 @@ async function insertNewuser(user) {
 }
 exports.insertNewuser = insertNewuser;
 
+async function validateUser(id, password) {
+  // console.log("password: ", password);
+  const user = await getuserById(id);
+  return user && !(password.localeCompare(user.password));
+}
+exports.validateUser = validateUser;
 
 async function getuserById(id) {
     const [ results ] = await mysqlPool.query(
@@ -95,73 +101,3 @@ async function deleteuserById(id) {
     }
 exports.deleteuserById = deleteuserById;
 
-
-
-  async function validateUser(id, password) {
-    const user = await getuserById(id);
-    return user && !(password.localeCompare(user.password));
-  }
-  exports.validateUser = validateUser;
-
-async function addSongToFavorites(id, songID){
-  var favSong = {"id":`/songs/${songID}`};
-  users[id].favSong.push(favSong);
-  console.log(users[id].favSong)
-  return favSong;
-}
-exports.addSongToFavorites = addSongToFavorites;
-
-async function addFollowedArtist(id, artistID){
-  var followedArtist = {"id":`/artists/${artistID}`};
-  users[id].followed_artists.push(followedArtist);
-  console.log(users[id].followedArtist)
-  return followedArtist;
-}
-exports.addFollowedArtist = addFollowedArtist;
-
-async function addAlbumArt(id, albumID){
-  var favAlbumArt = {"id":`/artists/${albumID}`};
-  users[id].favAlbumArt.push(favAlbumArt);
-  console.log(users[id].favAlbumArt)
-  return favAlbumArt;
-}
-exports.addAlbumArt = addAlbumArt;
-
-async function removeFollowedArtist(id, artistID){
-  var i = 0;
-  for(i = 0; i < users[id].followed_artists.length - 1; i++){
-    var followedArtist = {"id":`/artists/${artistID}`};
-    if(users[id].followed_artists[i] == followedArtist){
-      users[id].followed_artists[i] = null;
-      return users[id].followedArtist;
-    }
-  }
-  return null;
-}
-exports.removeFollowedArtist = removeFollowedArtist;
-
-async function removeSongFromFavorites(id, songID){
-  var i = 0;
-  for(i = 0; i < users[id].favSong.length - 1; i++){
-    var favSong = {"id":`/songs/${songID}`};
-    if(users[id].favSong[i] == favSong){
-      users[id].favSong[i] = null;
-      return users[id].favSong;
-    }
-  }
-  return null;
-}
-exports.removeSongFromFavorites = removeSongFromFavorites;
-
-async function removeAlbumArt(id, albumID){
-  var i = 0;
-  for(i = 0; i < users[id].favAlbumArt.length - 1; i++){
-    var favSong = {"id":`/songs/${albumID}`};
-    if(users[id].favAlbumArt[i] == favSong){
-      users[id].favAlbumArt[i] = null;
-      return users[id].favAlbumArt;
-    }
-  }
-  return null;
-}
-exports.removeAlbumArt = removeAlbumArt;
